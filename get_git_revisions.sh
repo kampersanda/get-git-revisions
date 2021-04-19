@@ -10,6 +10,8 @@
 git_dir=$1
 n=$2 #number of versions to checkout. If 0, check out all versions
 
+max_fsize=$((1024*1024*1024))
+
 cd $git_dir
 
 dat=`date | cut -d' ' -f 2,3,4 | tr -d ' ,'`
@@ -51,6 +53,18 @@ while read p; do
 			exit 0
 		fi	
 	fi
+
+	fsize=`ls -l $versions_file | awk '{ print $5; }'`
+
+	if [ $max_fsize -ne 0 -a $fsize -ge $max_fsize ]
+	then
+		echo "The file size achieves $fsize >= $max_fsize bytes"
+		git checkout -f origin/master
+		rm $commits_file
+		exit 0
+	fi
+
+	echo "The current file size is $fsize bytes"
 
 done < $commits_file
 
